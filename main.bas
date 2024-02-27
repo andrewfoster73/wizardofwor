@@ -9,6 +9,7 @@
 
 declare function getTime() as uinteger
 declare function lpad(target as string, to_length as ubyte) as string
+declare function getJoystick(player as ubyte) as ubyte
 
 asm 
     ; setting registers in an asm block means you can use the global equs for register names 
@@ -32,21 +33,25 @@ const actor_sprites as ubyte = 42      ' Bank holding actor sprites
 const show_debug as ubyte = 1           ' Turn on debugging display
 const calculate_fps as ubyte = 1        ' Enable/disable calculation of FPS  
 const flip_title_time as uinteger = 400 ' Number of frames until flipping title <-> scoring
+const player_pixel_speed as ubyte = 1   ' How many pixels to move the player
 
 ' Sprite Masks
 const sprite_no_mask as ubyte = %00000000 ' No flags set
 const sprite_xm as ubyte = %00001000      ' Horizontal mirror 
 const sprite_ym as ubyte = %00000100      ' Vertical mirror
-const sprite_r90 as ubyte = %00000001     ' Rotate 90 clockwise
 
 dim t1 as uinteger      ' First read of time
 dim t2 as uinteger      ' Second read of time
 dim time as uinteger    ' Accepted time
 dim frame as ulong      ' Current frame
 dim fps as fixed        ' Frames per second
-dim scoring_sprites(6) as ubyte => {100,101,102,103,104,105,106}
+dim scoring_sprite_ids(6) as ubyte => {100,101,102,103,104,105,106}
+dim player_sprite_ids(1 to 2) as ubyte => {1,2}
+dim player_frame_images(1 to 2, 1 to 3) as ubyte = {{0,1,2},{4,5,6}} 
+dim player_frame_pattern(1 to 12) as ubyte = {1,1,1,2,2,2,3,3,3,2,2,2}
 
 ' Game variables
+dim num_players as ubyte = 1
 dim p1_score as uinteger = 0
 dim p2_score as uinteger = 0
 dim hi_scores(4) as uinteger
@@ -64,11 +69,20 @@ dim game_state as ubyte
 ' 10-worluk-escaped'
 ' 11-wizard
 ' 12-game-over
-
+dim game_speed as ubyte = 1
+' 1-normal, 2-fast, 3-faster, 4-fastest
 dim dungeon_id as ubyte = 1
 dim dungeon_drawn as ubyte = 0
 dim flip_title_timer as uinteger = flip_title_time
 dim keypress as uinteger
+dim joystick(1 to 2) as ubyte
+dim player_x(1 to 2) as uinteger = {50,0}
+dim player_y(1 to 2) as uinteger = {50,0}
+dim player_firing(1 to 2) as uinteger
+dim player_bullet_x(1 to 2) as uinteger
+dim player_bullet_y(1 to 2) as uinteger
+dim player_frame(1 to 2) as ubyte = {1,1}
+dim player_direction(1 to 2) as ubyte = {4,0}   ' 0 - right, 4 - left, 1 - down, 3 - up
 
 setup()
 
@@ -121,22 +135,25 @@ do
         drawPlayer2Score()
     end if
 
+    for p = 1 to num_players
+        joystick(p) = getJoystick(p)
+        movePlayer(p)
+        drawPlayer(p)
+        ' Force leave start box
+        ' Read input
+        ' Move player
+        ' Handle firing
+        ' Handle collisions
+        ' Handle death
+    next p
+
     ' Draw Get Ready Go + Play music
     ' Draw DSD message + Play music
     ' Draw the doors
+
     ' Music
     '------
     ' Check music speed
-
-    ' Player 1
-    '----------
-    ' Force leave start box
-    ' Read input
-    ' Move player
-    ' Handle firing
-    ' Handle collisions
-    ' Handle death
-    ' Handle worluk kill
 
     ' Monsters
     '----------
@@ -150,6 +167,7 @@ do
     '-----------
     ' Check monsters dead
     ' Check if worluk appears
+    ' Handle worluk kill
     ' Check if wizard appears
 
     ' Game Over
@@ -162,6 +180,86 @@ do
         L2Text(0,0, "DBG " + STR(fps) + "       ",light_red_font,0)
     endif
 loop
+
+sub movePlayer(p as ubyte)
+    ' Update player direction
+    if joystick(p) = 1 then
+        ' RIGHT
+        player_direction(p) = 0
+        moveRight(p)
+    elseif joystick(p) = 2 then
+        ' LEFT 
+        player_direction(p) = 4
+        moveLeft(p)
+    elseif joystick(p) = 4 then
+        ' DOWN
+        player_direction(p) = 1
+        moveDown(p)
+    elseif joystick(p) = 8 then
+        ' UP
+        player_direction(p) = 3
+        moveUp(p)
+    else
+        ' maintain current direction but do not move
+    end if
+end sub
+
+sub moveRight(p as ubyte)
+    player_x(p) = player_x(p) + player_pixel_speed
+    updatePlayerFrame(p)
+end sub
+
+sub moveLeft(p as ubyte)
+    player_x(p) = player_x(p) - player_pixel_speed
+    updatePlayerFrame(p)
+end sub
+
+sub moveDown(p as ubyte)
+    player_y(p) = player_y(p) + player_pixel_speed
+    updatePlayerFrame(p)
+end sub
+
+sub moveUp(p as ubyte)
+    player_y(p) = player_y(p) - player_pixel_speed
+    updatePlayerFrame(p)
+end sub
+
+sub updatePlayerFrame(p as ubyte)
+    player_frame(p) = player_frame(p) + 1
+    if player_frame(p) > 12 then
+        player_frame(p) = 1
+    end if
+end sub
+
+sub drawPlayer(p as ubyte)
+    ' %00000000 - Right
+    ' %00001000 - Left
+    ' %00001110 - Up
+    ' %00001010 - Down
+    dim image as ubyte = player_frame_images(p, player_frame_pattern(player_frame(p)))
+    dim a3_flag as ubyte = player_direction(p) << 1
+    UpdateSprite(player_x(p),player_y(p),player_sprite_ids(p),image,a3_flag,0)
+end sub
+
+sub drawPlayer1Score()
+    dim score_str as string = STR(p1_score)
+    if p1_score > 0 then 
+        score_str = score_str + "00"
+    end if
+    L2Text(24,21,"!######&",yellow_font,0)
+    L2Text(24,22,"'" + lpad(score_str, 5) + score_str + "'",yellow_font,0)
+    L2Text(24,23,"$%%%%%%(",yellow_font,0)
+end sub
+
+sub drawPlayer2Score()
+    dim score_str as string = STR(p2_score)
+    if p2_score > 0 then 
+        score_str = score_str + "00"
+    end if
+    L2Text(0,21,"!######&",light_blue_font,0)
+    L2Text(0,22,"'" + lpad(score_str, 5) + score_str + "'",light_blue_font,0)
+    L2Text(0,23,"$%%%%%%(",light_blue_font,0)
+end sub
 
 sub setup()
     ' Load font sprites
@@ -223,7 +321,7 @@ end sub
 sub removeScoringSprites()
     dim i as uinteger
     for i = 0 to 6
-        RemoveSprite(scoring_sprites(i),0)
+        RemoveSprite(scoring_sprite_ids(i),0)
     next i
 end sub
 
@@ -280,25 +378,6 @@ sub drawDungeon(dungeon_id as ubyte)
     dungeon_drawn = 1
 end sub
 
-sub drawPlayer1Score()
-    dim score_str as string = STR(p1_score)
-    if p1_score > 0 then 
-        score_str = score_str + "00"
-    end if
-    L2Text(24,21,"!######&",yellow_font,0)
-    L2Text(24,22,"'" + lpad(score_str, 5) + score_str + "'",yellow_font,0)
-    L2Text(24,23,"$%%%%%%(",yellow_font,0)
-end sub
-
-sub drawPlayer2Score()
-    dim score_str as string = STR(p2_score)
-    if p2_score > 0 then 
-        score_str = score_str + "00"
-    end if
-    L2Text(0,21,"!######&",light_blue_font,0)
-    L2Text(0,22,"'" + lpad(score_str, 5) + score_str + "'",light_blue_font,0)
-    L2Text(0,23,"$%%%%%%(",light_blue_font,0)
-end sub
 
 ' Returns number of seconds since computer was turned on
 ' Uses the frame counter ports, 23672-23674
@@ -316,3 +395,13 @@ function lpad(target as string, to_length as ubyte) as string
     return padding
 end function
 
+' Returns joystick port value
+function getJoystick(player as ubyte) as ubyte
+    dim action as ubyte = 0
+    if player = 1 then
+        action = in(31)
+    else
+        action = in(55)
+    end if
+    return action
+end function
