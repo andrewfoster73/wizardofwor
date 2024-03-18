@@ -41,21 +41,8 @@ dim door_close_timer as uinteger = DOOR_CLOSE_TIME
 
 ' Game variables
 dim num_players as ubyte = 1
-dim p1_score as uinteger = 0
-dim p2_score as uinteger = 0
+dim player_score(1 to 2) as uinteger => {0,0}
 dim game_state as ubyte
-' 0-title
-' 1-initial-get-ready
-' 2-playing-ssd
-' 3-playing-dsd
-' 4-complete-get-ready
-' 5-splash-dsd
-' 6-splash-dsd-extra-man
-' 7-splash-extra-man
-' 8-playing-worluk
-' 9-worluk-escaped
-' 10-playing-wizard
-' 11-game-over
 dim game_speed as ubyte = 1                     ' 1 - normal, 2 - fast, 3 - faster, 4 - fastest
 dim game_level as ubyte = 1
 dim playing_state as ubyte = 0                  ' 0 - not playing, 1 - playing

@@ -9,6 +9,7 @@
 #include "modules/constants.bas"
 #include "modules/utilities.bas"
 #include "modules/globals.bas"
+#include "modules/collisions.bas"
 #include "modules/movement.bas"
 #include "modules/players.bas"
 #include "modules/npcs.bas"
@@ -30,6 +31,7 @@ asm
 playmusicnl:
 end asm
 
+BORDER 0
 ShowLayer2(1)
 
 RANDOMIZE
@@ -157,9 +159,10 @@ sub gameLoop
                 ' Handle collisions
                 if player_state(p) = 1 then
                     player_frame(p) = 1
-                    drawDying(p)
+                    drawPlayerDying(p)
                 end if
             next p
+            
 
             ' Draw the doors
 
@@ -173,12 +176,14 @@ sub gameLoop
             if npc_frame_counter = 0 then
                 ' updateSpeed
                 for npc = 1 to 6
-                    if npc_state(npc) <> 2 then
+                    if npc_state(npc) = 0 then
                         moveNPC(npc)
                         drawMonster(npc, npc_type(npc), npc_x(npc), npc_y(npc))
                         ' monsterFire
-                        ' handle collisions
                         ' updateRadar()
+                    end if
+                    if npc_state(npc) = 1 then
+                        drawNPCDying(npc)
                     end if
                 next npc
                 npc_frame_counter = 4 - game_speed
@@ -199,7 +204,7 @@ sub gameLoop
         end if
 
         if show_debug = 1 then
-            L2Text(0,0, "DBG " + STR(npc_distance(1)) + ":" + STR(npc_direction(1))+ ":" + STR(actor_tile(3)) + ":" + STR(npc_x(1)) + ":" + STR(npc_y(1)) + "       ",light_red_font,0)
+            L2Text(0,0, "DBG "  + STR(player_score(1))+ ":" + STR(actor_tile(11)) + ":" + STR(player_bullet_x(1)) + ":" + STR(player_bullet_y(1)) + "       ",light_red_font,0)
         end if
         ' if in(SPRITE_STATUS_SLOT_SELECT_P_303B) & BIN 00000001 = 1 then
         '     sprite_collision = 1
@@ -236,8 +241,8 @@ sub setup()
     fps = 0
 
     ' Initialise players
-    p1_score = 0
-    p2_score = 0
+    player_score(1) = 0
+    player_score(2) = 0
 
     ' Reset high scores
     dim a as uinteger

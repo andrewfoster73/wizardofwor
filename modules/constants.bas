@@ -59,8 +59,8 @@ const min_bullet_y as ubyte = 43
 const max_bullet_y as ubyte = 133
 
 ' Dungeons
-const arena_dungeon_id as ubyte = 26
-const pit_dungeon_id as ubyte = 27
+const ARENA_DUNGEON_ID as ubyte = 26
+const PIT_DUNGEON_ID as ubyte = 27
 
 ' Game states
 const GAME_STATE_TITLE as ubyte = 0

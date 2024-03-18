@@ -1,12 +1,12 @@
 function getDungeonId(current_level as ubyte) as ubyte
     ' Level 4 is always The Arena
-    if current_level = 4 then return arena_dungeon_id
+    if current_level = 4 then return ARENA_DUNGEON_ID
 
     ' Level 13 and every 6th dungeon after that is always The Pit
-    if current_level >= 13 and (current_level - 13) mod 6 = 0 then return pit_dungeon_id
+    if current_level >= 13 and (current_level - 13) mod 6 = 0 then return PIT_DUNGEON_ID
 
     ' Level 1 to 7 is a random dungeon from ids 1 to 15
-    if current_level < 8 then return rndRange(1, 3)
+    if current_level < 8 then return rndRange(1, 2)
 
     ' Level 8 onwards is a random dungeon from ids 16 to 25
     if current_level > 7 then return rndRange(16, 26)

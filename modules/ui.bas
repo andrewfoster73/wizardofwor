@@ -17,11 +17,11 @@ sub drawPlayer1Score(x_offset as ubyte, y_offset as ubyte)
 end sub
 
 sub updatePlayer1Score(x_offset as ubyte, y_offset as ubyte)
-    dim score_str as string = STR(p1_score)
-    if p1_score > 0 then 
+    dim score_str as string = STR(player_score(1))
+    if player_score(1) > 0 then 
         score_str = score_str + "00"
     end if
-    L2Text(22 + x_offset,17 + y_offset,"'" + lpad(score_str, 5, " ") + score_str + "'",yellow_font,0)
+    L2Text(22 + x_offset, 17 + y_offset, "'" + lpad(score_str, 5, " ") + score_str + "'", yellow_font, 0)
 end sub
 
 sub drawPlayer2Score(x_offset as ubyte, y_offset as ubyte)
@@ -31,11 +31,11 @@ sub drawPlayer2Score(x_offset as ubyte, y_offset as ubyte)
 end sub
 
 sub updatePlayer2Score(x_offset as ubyte, y_offset as ubyte)
-    dim score_str as string = STR(p2_score)
-    if p2_score > 0 then 
+    dim score_str as string = STR(player_score(2))
+    if player_score(2) > 0 then 
         score_str = score_str + "00"
     end if
-    L2Text(0 + x_offset,17 + y_offset,"'" + lpad(score_str, 5, " ") + score_str + "'",light_blue_font,0)
+    L2Text(0 + x_offset, 17 + y_offset, "'" + lpad(score_str, 5, " ") + score_str + "'", light_blue_font, 0)
 end sub
 
 sub drawRadar(current_level as ubyte)

@@ -2,11 +2,11 @@ sub movePlayer(p as ubyte)
     ' Work out which tile they are currently on as this determines the direction they can go
     dim x_offset as ubyte = 0
     dim y_offset as ubyte = 0
-    if player_direction(p) = 4 then
+    if player_direction(p) = MOVING_LEFT then
         ' Need the back of the worrior
         x_offset = 15
     end if
-    if player_direction(p) = 3 then
+    if player_direction(p) = MOVING_UP then
         ' Need the back of the worrior
         y_offset = 15
     end if
@@ -45,15 +45,19 @@ end sub
 sub movePlayerBullet(p as ubyte)
     dim x_offset as ubyte = 0
     dim y_offset as ubyte = 0
-    if player_bullet_direction(p) = 4 then
-        ' Need the back of the bullet
-        x_offset = 10
+    if player_bullet_direction(p) = MOVING_RIGHT then
+        x_offset = -5
     end if
-    if player_bullet_direction(p) = 3 then
-        ' Need the back of the bullet
-        y_offset = 10
+    if player_bullet_direction(p) = MOVING_LEFT then
+        x_offset = 21
     end if
-    actor_tile(p + 10) = getTile(player_bullet_x(p),player_bullet_y(p),x_offset,y_offset, dungeon_id)
+    if player_bullet_direction(p) = MOVING_DOWN then
+        y_offset = -5
+    end if
+    if player_bullet_direction(p) = MOVING_UP then
+        y_offset = 21
+    end if
+    actor_tile(p + 10) = getTile(player_bullet_x(p), player_bullet_y(p), x_offset, y_offset, dungeon_id)
 
     if player_bullet_direction(p) = 0
         movePlayerBulletRight(p)
@@ -94,6 +98,7 @@ sub moveRight(p as ubyte)
     if canMoveRight(p, player_x(p), player_y(p), max_x, 0) then
         player_x(p) = player_x(p) + player_pixel_speed
         updatePlayerFrame(p)
+        checkPlayerCollision(p)
     end if
 end sub
 
@@ -101,6 +106,7 @@ sub moveLeft(p as ubyte)
     if canMoveLeft(p, player_x(p), player_y(p), min_x, 0) then
         player_x(p) = player_x(p) - player_pixel_speed
         updatePlayerFrame(p)
+        checkPlayerCollision(p)
     end if
 end sub
 
@@ -108,6 +114,7 @@ sub moveDown(p as ubyte)
     if canMoveDown(p, player_x(p), player_y(p), max_y, 0) then
         player_y(p) = player_y(p) + player_pixel_speed
         updatePlayerFrame(p)
+        checkPlayerCollision(p)
     end if
 end sub
 
@@ -115,6 +122,7 @@ sub moveUp(p as ubyte)
     if canMoveUp(p, player_x(p), player_y(p), min_y, 0) then
         player_y(p) = player_y(p) - player_pixel_speed
         updatePlayerFrame(p)
+        checkPlayerCollision(p)
     end if
 end sub
 
@@ -145,6 +153,7 @@ end sub
 sub movePlayerBulletRight(p as ubyte)
     if canMoveRight(p + 10, player_bullet_x(p), player_bullet_y(p), max_bullet_x, 4) then 
         ' Check collision with monsters
+        checkBulletCollision(p)
 
         ' Check collision with other bullets
         player_bullet_x(p) = player_bullet_x(p) + player_bullet_pixel_speed
@@ -152,14 +161,14 @@ sub movePlayerBulletRight(p as ubyte)
         ' Player no longer firing
         player_firing(p) = 0
         ' Hide bullet sprite
-        'RemoveSprite(player_bullet_ids(p), 0)
-        return
+        RemoveSprite(player_bullet_ids(p), 0)
     end if
 end sub
 
 sub movePlayerBulletLeft(p as ubyte)
     if canMoveLeft(p + 10,player_bullet_x(p),player_bullet_y(p), min_bullet_x, 4) then 
         ' Check collision with monsters
+        checkBulletCollision(p)
 
         ' Check collision with other bullets
 
@@ -168,14 +177,14 @@ sub movePlayerBulletLeft(p as ubyte)
         ' Player no longer firing
         player_firing(p) = 0
         ' Hide bullet sprite
-        'RemoveSprite(player_bullet_ids(p), 0)
-        return
+        RemoveSprite(player_bullet_ids(p), 0)
     end if
 end sub
 
 sub movePlayerBulletDown(p as ubyte)
     if canMoveDown(p + 10,player_bullet_x(p),player_bullet_y(p), max_bullet_y, 4) then 
         ' Check collision with monsters
+        checkBulletCollision(p)
 
         ' Check collision with other bullets
         player_bullet_y(p) = player_bullet_y(p) + player_bullet_pixel_speed
@@ -183,14 +192,14 @@ sub movePlayerBulletDown(p as ubyte)
         ' Player no longer firing
         player_firing(p) = 0
         ' Hide bullet sprite
-        'RemoveSprite(player_bullet_ids(p), 0)
-        return
+        RemoveSprite(player_bullet_ids(p), 0)
     end if
 end sub
 
 sub movePlayerBulletUp(p as ubyte)
     if canMoveUp(p + 10,player_bullet_x(p),player_bullet_y(p), min_bullet_y, 4) then 
         ' Check collision with monsters
+        checkBulletCollision(p)
 
         ' Check collision with other bullets
         player_bullet_y(p) = player_bullet_y(p) - player_bullet_pixel_speed
@@ -198,8 +207,7 @@ sub movePlayerBulletUp(p as ubyte)
         ' Player no longer firing
         player_firing(p) = 0
         ' Hide bullet sprite
-        'RemoveSprite(player_bullet_ids(p), 0)
-        return
+        RemoveSprite(player_bullet_ids(p), 0)
     end if
 end sub
 
@@ -210,7 +218,7 @@ sub drawBullet(p as ubyte)
     UpdateSprite(player_bullet_x(p),player_bullet_y(p),player_bullet_ids(p),player_bullet_image,a3_flag,0)
 end sub
 
-sub drawDying(p as ubyte)
+sub drawPlayerDying(p as ubyte)
     RemoveSprite(p,0)
     dim image as ubyte = explosion_images(explosion_pattern(player_frame(p)))
     UpdateSprite(player_x(p),player_y(p),player_dying_ids(p),image,0,0)

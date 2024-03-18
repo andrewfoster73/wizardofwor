@@ -6,6 +6,7 @@ function getStartingY() as ubyte
     return rndRange(3, 9) * 16
 end function
 
+
 sub shuffleDirections()
     dim d1 as ubyte
     dim d2 as ubyte
@@ -45,13 +46,17 @@ end function
 
 sub spawnMonsters()
     for npc = 1 to 6
-        npc_x(npc) = getStartingX()
-        npc_y(npc) = getStartingY()
-        npc_direction(npc) = MOVING_RIGHT
-        npc_type(npc) = 1
-        npc_frame(npc) = 1
-        drawMonster(npc, npc_type(npc), npc_x(npc), npc_y(npc))
+        spawnMonster(npc, 1)
     next npc
+end sub
+
+sub spawnMonster(npc as ubyte, type as ubyte)
+    npc_x(npc) = getStartingX()
+    npc_y(npc) = getStartingY()
+    npc_direction(npc) = MOVING_RIGHT
+    npc_type(npc) = type
+    npc_frame(npc) = 1
+    drawMonster(npc, npc_type(npc), npc_x(npc), npc_y(npc))
 end sub
 
 sub moveNPC(npc as ubyte)
@@ -137,6 +142,7 @@ sub moveNPC(npc as ubyte)
         end if
     end if
     moveNPCDirection(npc_direction(npc), npc)
+    checkNPCCollision(npc)
 end sub
 
 sub moveNPCDirection(d as ubyte, npc as ubyte)
@@ -195,6 +201,28 @@ sub drawMonster(npc as ubyte, type as ubyte, x as ubyte, y as ubyte)
     dim image as ubyte = monster_frame_images(type, npc_frame_pattern(game_speed, npc_frame(npc)))
     dim a3_flag as ubyte = npc_direction(npc) << 1
     UpdateSprite(x,y,monster_sprite_ids(npc),image,a3_flag,0)
+end sub
+
+sub drawNPCDying(npc as ubyte)
+    RemoveSprite(monster_sprite_ids(npc), 0)
+    dim image as ubyte = explosion_images(explosion_pattern(npc_frame(npc)))
+    UpdateSprite(npc_x(npc), npc_y(npc), monster_dying_ids(npc), image, 0, 0)
+    npc_frame(npc) = npc_frame(npc) + 1
+    if npc_frame(npc) > 24 then
+        npc_frame(npc) = 1
+        if npc_type(npc) = 1 then
+            npc_type(npc) = 2
+            npc_state(npc) = 0
+            spawnMonster(npc, npc_type(npc))
+        elseif npc_type(npc) = 2 then
+            npc_type(npc) = 3
+            npc_state(npc) = 0
+            spawnMonster(npc, npc_type(npc))
+        else
+            npc_state(npc) = 2
+        end if
+        RemoveSprite(monster_dying_ids(npc), 0)
+    end if
 end sub
 
 sub updateNPCFrame(npc as ubyte)
