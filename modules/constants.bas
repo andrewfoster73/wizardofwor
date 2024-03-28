@@ -1,3 +1,7 @@
+' Booleans
+const TRUE as ubyte = 1
+const FALSE as ubyte = 0
+
 ' Memory Banks
 const yellow_font as ubyte = 38        ' Bank holding yellow font sprites
 const light_red_font as ubyte = 39     ' Bank holding light red font sprites
@@ -11,12 +15,14 @@ const LIGHT_BLUE_COLOUR as ubyte = 111
 
 ' Configuration
 const show_debug as ubyte = 1           ' Turn on debugging display
-const calculate_fps as ubyte = 0        ' Enable/disable calculation of FPS  
 const FLIP_TITLE_TIME as uinteger = 400 ' Number of frames until flipping title <-> scoring
 const GET_READY_TIME as uinteger = 100
-const EJECT_PLAYER_TIME as uinteger = 150
-const DOOR_OPEN_TIME as uinteger = 1000
-const DOOR_CLOSE_TIME as uinteger = 1000
+const GAME_OVER_TIME as uinteger = 100
+const EJECT_PLAYER_TIME as uinteger = 500
+const DOOR_OPEN_TIME as uinteger = 500
+const DOOR_CLOSE_TIME as uinteger = 500
+const RADAR_UPDATE_TIME as uinteger = 16
+const WIZARD_TELEPORT_TIME as uinteger = 160
 const player_firing_animation_frames as ubyte = 4   ' Number of frames to show firing animation
 const player_pixel_speed as ubyte = 1   ' How many pixels to move the player
 const player_bullet_pixel_speed as ubyte = 3
@@ -33,6 +39,10 @@ const min_x as ubyte = 64
 const max_x as ubyte = 224
 const min_y as ubyte = 48
 const max_y as ubyte = 128
+const cage1_x as ubyte = 224
+const cage1_y as ubyte = 144
+const cage2_x as ubyte = 160
+const cage2_y as ubyte = 144
 
 ' Tile movement rules
 const left_mask as ubyte =  %00001000   ' 8 -> 4
@@ -76,8 +86,32 @@ const GAME_STATE_PLAYING_WORLUK_ESCAPED as ubyte = 9
 const GAME_STATE_PLAYING_WIZARD as ubyte = 10
 const GAME_STATE_GAME_OVER as ubyte = 11
 
+' Actor states
+const ALIVE as ubyte = 0
+const DYING as ubyte = 1
+const DEAD as ubyte = 2
+const ESCAPED as ubyte = 3
+const INVISIBLE as ubyte = 5
+
+' Firing states
+const NOT_FIRING as ubyte = 0
+const FIRING as ubyte = 1
+
 ' Movement
 const MOVING_RIGHT as ubyte = 0
 const MOVING_LEFT as ubyte = 4
 const MOVING_DOWN as ubyte = 1
 const MOVING_UP as ubyte = 3
+
+' Joystick
+const JOY_RIGHT as ubyte = 1
+const JOY_LEFT as ubyte = 2
+const JOY_DOWN as ubyte = 4
+const JOY_UP as ubyte = 8
+
+' Monster types
+const BURWOR as ubyte = 1
+const GARWOR as ubyte = 2
+const THORWOR as ubyte = 3
+const WORLUK as ubyte = 4
+const WIZARD as ubyte = 5

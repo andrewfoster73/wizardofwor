@@ -2,8 +2,6 @@
 dim t1 as uinteger              ' First read of time
 dim t2 as uinteger              ' Second read of time
 dim time as uinteger            ' Accepted time
-dim frame as ulong              ' Current frame
-dim fps as fixed                ' Frames per second
 dim keypress as uinteger        ' Last key press
 dim joystick(1 to 2) as ubyte   ' Last joystick input for player 1 (port 31) and player 2 (port 55)
 
@@ -16,20 +14,23 @@ dim scoring_sprite_ids(6) as ubyte => {100,101,102,103,104,105,106}
 dim player_sprite_ids(1 to 2) as ubyte => {1,2}
 dim player_bullet_ids(1 to 2) as ubyte => {3,4}
 dim player_dying_ids(1 to 2) as ubyte => {13,14}
-dim player_lives_ids(1 to 2, 1 to 4) as ubyte => {{31,32,33,34},{35,36,37,38}}
+dim player_lives_ids(1 to 2, 1 to 5) as ubyte => {{31,32,33,34,36},{37,38,39,40,41}}
 dim monster_sprite_ids(1 to 8) as ubyte => {5,6,7,8,9,10,11,12}
 dim monster_bullet_ids(1 to 8) as ubyte => {15,16,17,18,19,20,21,22}
 dim monster_dying_ids(1 to 8) as ubyte => {23,24,25,26,27,28,29,30}
+dim door_ids(1 to 2) as ubyte => {50, 51}
 
-dim player_frame_images(1 to 2, 1 to 3) as ubyte = {{0,1,2},{4,5,6}}
+dim player_frame_images(1 to 2, 1 to 3) as ubyte = {{4,5,6},{0,1,2}}
 dim player_bullet_image as ubyte = 8
 dim player_firing_image(1 to 2) as ubyte = {3,7} 
-dim monster_frame_images(1 to 5, 1 to 3) as ubyte => {{12,13,14},{16,17,18},{20,21,22},{24,25,26},{28,29,30}}
+dim monster_frame_images(1 to 5, 1 to 3) as ubyte => {{12,13,14},{16,17,18},{20,21,22},{28,29,30},{24,25,26}}
 dim monster_bullet_image as ubyte = 9
 dim explosion_images(1 to 8) as ubyte = {32,33,34,35,36,37,38,39}
 dim frame_pattern(1 to 12) as ubyte = {1,1,1,2,2,2,3,3,3,2,2,2}
 dim npc_frame_pattern(1 to 1, 1 to 48) as ubyte => {{1,1,1,1,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,2,2,2,2,3,3,3,3,3,3,3,3,3,3,3,3,2,2,2,2,2,2,2,2,2,2,2,2}}
 dim explosion_pattern(1 to 24) as ubyte = {1,1,1,2,2,2,3,3,3,4,4,4,5,5,5,6,6,6,7,7,7,8,8,8}
+dim door_closed_image as ubyte = 11
+dim door_open_image as ubyte = 10
 
 ' Timers
 dim awaiting_timer as ubyte = 0
@@ -38,22 +39,28 @@ dim get_ready_timer as uinteger = GET_READY_TIME
 dim eject_player_timer as uinteger = EJECT_PLAYER_TIME
 dim door_open_timer as uinteger = DOOR_OPEN_TIME
 dim door_close_timer as uinteger = DOOR_CLOSE_TIME
+dim radar_update_timer as uinteger = RADAR_UPDATE_TIME
+dim wizard_teleport_timer as uinteger = WIZARD_TELEPORT_TIME
 
 ' Game variables
 dim num_players as ubyte = 1
 dim player_score(1 to 2) as uinteger => {0,0}
 dim game_state as ubyte
 dim game_speed as ubyte = 1                     ' 1 - normal, 2 - fast, 3 - faster, 4 - fastest
-dim game_level as ubyte = 1
+dim game_level as ubyte = 4
+dim double_score_dungeon as ubyte = 0
+dim doors_closed as ubyte = 1                   ' 1 - closed, 0 - open
+
 dim playing_state as ubyte = 0                  ' 0 - not playing, 1 - playing
 dim sprite_collision as ubyte = 0
 dim sprite_slot as ubyte = 0
-dim current_level as ubyte = 1
 dim dungeon_id as ubyte = 1                     ' Current dungeon being displayed
 dim player_lives(1 to 2) as ubyte = {3,3}       ' Lives remaining for each player
 dim player_hiding(1 to 2) as ubyte = {1,1}      ' 1 - in cage, 0 - left cage
-dim player_x(1 to 2) as uinteger = {64,0}       ' x pixel coordinate for each player
-dim player_y(1 to 2) as uinteger = {48,0}       ' y pixel coordinate for each player
+dim player_leaving(1 to 2) as ubyte = {0, 0}    ' 1 - leaving cage, 0 - not leaving cage
+dim player_leaving_timer(1 to 2) as ubyte = {0, 0}
+dim player_x(1 to 2) as uinteger = {0,0}       ' x pixel coordinate for each player
+dim player_y(1 to 2) as uinteger = {0,0}       ' y pixel coordinate for each player
 dim player_firing(1 to 2) as uinteger           ' is the player firing for each player
 dim player_firing_animation_timer(1 to 2) as uinteger = {0,0} ' show firing animation until timer reaches 0
 dim player_bullet_x(1 to 2) as uinteger         ' bullet x pixel coordinate for each player
@@ -75,5 +82,7 @@ dim npc_type(1 to 8) as ubyte                   ' 1 - burwor, 2 - garwor, 3 - th
 dim npc_distance(1 to 8) as ubyte => {0,0,0,0,0,0,0,0} ' how many pixels the NPC has moved in the current direction
 dim npc_frame_counter as ubyte = 4              ' how many frames between NPC actions, decreases as game speed increases
 dim directions(1 to 4) as ubyte => {left_mask, right_mask, down_mask, up_mask}
+dim wors_all_dead as ubyte = 0
+dim burwors_dead as ubyte = 0
 
 dim actor_tile(1 to 20) as ubyte                ' 1-2 - players, 3-10 - 6 monsters, 1 worluk, 1 wizard, 11-12 - player bullets, 13-20 - npc bullets

@@ -46,7 +46,7 @@ end function
 
 sub spawnMonsters()
     for npc = 1 to 6
-        spawnMonster(npc, 1)
+        spawnMonster(npc, BURWOR)
     next npc
 end sub
 
@@ -74,10 +74,11 @@ sub moveNPC(npc as ubyte)
     dim actor_id as ubyte = 2 + npc
     actor_tile(actor_id) = getTile(npc_x(npc), npc_y(npc), x_offset, y_offset, dungeon_id)
     dim current_tile as ubyte = actor_tile(actor_id)
+    dim coin_toss as ubyte = (rndRange(1,3) = 1)
 
     ' Update NPC direction semi-randomly
     if npc_direction(npc) = MOVING_RIGHT then
-        if npc_distance(npc) > 48 then
+        if npc_distance(npc) > 64 then
             ' Maybe change direction
             if rndRange(1, 6) = 1 then
                 npc_direction(npc) = randomDirection(tile_masks(current_tile))
@@ -86,14 +87,14 @@ sub moveNPC(npc as ubyte)
         elseif canMoveRight(actor_id, npc_x(npc), npc_y(npc), max_x, 0) = 0 then
             npc_direction(npc) = randomDirection(tile_masks(current_tile))
         else
-            if canMoveDown(actor_id, npc_x(npc), npc_y(npc), max_y, 0) then
+            if canMoveDown(actor_id, npc_x(npc), npc_y(npc), max_y, 0) AND coin_toss = TRUE then
                 npc_direction(npc) = MOVING_DOWN
-            elseif canMoveUp(actor_id, npc_x(npc), npc_y(npc), min_y, 0)
+            elseif canMoveUp(actor_id, npc_x(npc), npc_y(npc), min_y, 0) AND coin_toss = TRUE
                 npc_direction(npc) = MOVING_UP
             end if
         end if
     elseif npc_direction(npc) = MOVING_LEFT then
-        if npc_distance(npc) > 48 then
+        if npc_distance(npc) > 64 then
             ' Maybe change direction
             if rndRange(1, 6) = 1 then
                 npc_direction(npc) = randomDirection(tile_masks(current_tile))
@@ -102,14 +103,14 @@ sub moveNPC(npc as ubyte)
         elseif canMoveLeft(actor_id, npc_x(npc), npc_y(npc), min_x, 0) = 0 then
             npc_direction(npc) = randomDirection(tile_masks(current_tile))
         else 
-            if canMoveDown(actor_id, npc_x(npc), npc_y(npc), max_y, 0) then
+            if canMoveDown(actor_id, npc_x(npc), npc_y(npc), max_y, 0) AND coin_toss = TRUE then
                 npc_direction(npc) = MOVING_DOWN
-            elseif canMoveUp(actor_id, npc_x(npc), npc_y(npc), min_y, 0)
+            elseif canMoveUp(actor_id, npc_x(npc), npc_y(npc), min_y, 0) AND coin_toss = TRUE
                 npc_direction(npc) = MOVING_UP
             end if
         end if
     elseif npc_direction(npc) = MOVING_DOWN then
-        if npc_distance(npc) > 48 then
+        if npc_distance(npc) > 64 then
             ' Maybe change direction
             if rndRange(1, 6) = 1 then
                 npc_direction(npc) = randomDirection(tile_masks(current_tile))
@@ -118,14 +119,14 @@ sub moveNPC(npc as ubyte)
         elseif canMoveDown(actor_id, npc_x(npc), npc_y(npc), max_y, 0) = 0 then
             npc_direction(npc) = randomDirection(tile_masks(current_tile))
         else
-            if canMoveRight(actor_id, npc_x(npc), npc_y(npc), max_x, 0)
+            if canMoveRight(actor_id, npc_x(npc), npc_y(npc), max_x, 0) AND coin_toss = TRUE
                 npc_direction(npc) = MOVING_RIGHT
-            elseif canMoveLeft(actor_id, npc_x(npc), npc_y(npc), min_x, 0) then
+            elseif canMoveLeft(actor_id, npc_x(npc), npc_y(npc), min_x, 0) AND coin_toss = TRUE then
                 npc_direction(npc) = MOVING_LEFT
             end if    
         end if
     elseif npc_direction(npc) = MOVING_UP then
-        if npc_distance(npc) > 48 then
+        if npc_distance(npc) > 64 then
             ' Maybe change direction
             if rndRange(1, 6) = 1 then
                 npc_direction(npc) = randomDirection(tile_masks(current_tile))
@@ -134,9 +135,9 @@ sub moveNPC(npc as ubyte)
         elseif canMoveUp(actor_id, npc_x(npc), npc_y(npc), min_y, 0) = 0 then
             npc_direction(npc) = randomDirection(tile_masks(current_tile))
         else
-            if canMoveRight(actor_id, npc_x(npc), npc_y(npc), max_x, 0)
+            if canMoveRight(actor_id, npc_x(npc), npc_y(npc), max_x, 0) AND coin_toss = TRUE
                 npc_direction(npc) = MOVING_RIGHT
-            elseif canMoveLeft(actor_id, npc_x(npc), npc_y(npc), min_x, 0) then
+            elseif canMoveLeft(actor_id, npc_x(npc), npc_y(npc), min_x, 0) AND coin_toss = TRUE then
                 npc_direction(npc) = MOVING_LEFT
             end if               
         end if
@@ -199,29 +200,48 @@ sub drawMonster(npc as ubyte, type as ubyte, x as ubyte, y as ubyte)
     ' %00001110 - Up
     ' %00001010 - Down
     dim image as ubyte = monster_frame_images(type, npc_frame_pattern(game_speed, npc_frame(npc)))
-    dim a3_flag as ubyte = npc_direction(npc) << 1
+    dim a3_flag as ubyte = 0
+    if npc < 7 then
+        a3_flag = npc_direction(npc) << 1
+    end if
     UpdateSprite(x,y,monster_sprite_ids(npc),image,a3_flag,0)
 end sub
 
 sub drawNPCDying(npc as ubyte)
+    ' Remove the dead NPC
     RemoveSprite(monster_sprite_ids(npc), 0)
+    
+    ' Draw the explosion sprites
     dim image as ubyte = explosion_images(explosion_pattern(npc_frame(npc)))
     UpdateSprite(npc_x(npc), npc_y(npc), monster_dying_ids(npc), image, 0, 0)
+    
     npc_frame(npc) = npc_frame(npc) + 1
+
+    ' Completed the dying animation now so maybe respawn
     if npc_frame(npc) > 24 then
         npc_frame(npc) = 1
-        if npc_type(npc) = 1 then
-            npc_type(npc) = 2
-            npc_state(npc) = 0
-            spawnMonster(npc, npc_type(npc))
-        elseif npc_type(npc) = 2 then
-            npc_type(npc) = 3
-            npc_state(npc) = 0
+        RemoveSprite(monster_dying_ids(npc), 0)
+        
+        if npc_type(npc) = BURWOR then
+            burwors_dead = burwors_dead + 1
+            ' First dungeon last burwor turns, from sixth dungeon onwards all turn
+            if 7 - game_level = burwors_dead OR game_level > 6 then
+                ' Burwor turns into Garwor
+                npc_type(npc) = GARWOR
+                npc_state(npc) = ALIVE
+                spawnMonster(npc, npc_type(npc))
+            else
+                npc_state(npc) = DEAD
+            end if
+        elseif npc_type(npc) = GARWOR then
+            ' Garwor turns into Thorwor
+            npc_type(npc) = THORWOR
+            npc_state(npc) = ALIVE
             spawnMonster(npc, npc_type(npc))
         else
-            npc_state(npc) = 2
+            ' Otherwise just dead
+            npc_state(npc) = DEAD
         end if
-        RemoveSprite(monster_dying_ids(npc), 0)
     end if
 end sub
 

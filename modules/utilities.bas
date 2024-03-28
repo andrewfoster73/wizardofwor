@@ -1,9 +1,3 @@
-' Returns number of seconds since computer was turned on
-' Uses the frame counter ports, 23672-23674
-function getTime() as uinteger
-    return (65536 * PEEK 23674 + 256 * PEEK 23673 + PEEK 23672)/50
-end function
-
 ' Pad with spaces on left until to_length is reached
 function lpad(target as string, to_length as ubyte, char as string) as string
     dim target_len as ubyte = LEN(target)
@@ -25,9 +19,9 @@ function getJoystick(player as ubyte) as ubyte
     return action
 end function
 
-function getTile(x as ubyte, y as ubyte, x_offset as ubyte, y_offset as ubyte, dungeon_id as ubyte) as ubyte
-   dim tx as ubyte = CAST(ubyte,(x - 48 + x_offset) / 16)
-   dim ty as ubyte = CAST(ubyte,(y - 48 + y_offset) / 16)
+function getTile(x as uinteger, y as uinteger, x_offset as uinteger, y_offset as uinteger, dungeon_id as uinteger) as ubyte
+   dim tx as uinteger = CAST(uinteger,(x - 48 + x_offset) / 16)
+   dim ty as uinteger = CAST(uinteger,(y - 48 + y_offset) / 16)
    dim dungeon_offset as uinteger = (dungeon_id - 1) * 91
    return peek(57344 + dungeon_offset + tx + (ty * 13))
 end function

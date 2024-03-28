@@ -1,4 +1,5 @@
 function canMoveRight(actor_id as ubyte, x as ubyte, y as ubyte, max_x as ubyte, x_offset as ubyte) as ubyte
+    if y = 80 AND doors_closed = FALSE then return 1
     if x >= max_x then return 0
     if y mod 16 <> 0 then return 0
 
@@ -12,6 +13,7 @@ function canMoveRight(actor_id as ubyte, x as ubyte, y as ubyte, max_x as ubyte,
 end function
 
 function canMoveLeft(actor_id as ubyte, x as ubyte, y as ubyte, min_x as ubyte, x_offset as ubyte) as ubyte
+    if y = 80 AND doors_closed = FALSE then return 1
     if x <= min_x then return 0
     if y mod 16 <> 0 then return 0
 

@@ -1,12 +1,20 @@
 sub drawPlayer1Lives()
+    for l = 1 to 5
+        RemoveSprite(player_lives_ids(1, l), 0)
+    next l
+    if player_lives(1) = 0 then return
     for l = 1 to player_lives(1) - 1
-        UpdateSprite(240,160-l*16,player_lives_ids(1, l),6,sprite_xm,0)
+        UpdateSprite(240, 160-l*16, player_lives_ids(1, l), 6, sprite_xm, 0)
     next l
 end sub
 
 sub drawPlayer2Lives()
+    for l = 1 to 5
+        RemoveSprite(player_lives_ids(2, l), 0)
+    next l
+    if player_lives(2) = 0 then return
     for l = 1 to player_lives(2) - 1
-        UpdateSprite(48,160-l*16,player_lives_ids(2, l),2,sprite_no_mask,0)
+        UpdateSprite(48, 160-l*16, player_lives_ids(2, l), 2, sprite_no_mask, 0)
     next l
 end sub
 
@@ -38,27 +46,49 @@ sub updatePlayer2Score(x_offset as ubyte, y_offset as ubyte)
     L2Text(0 + x_offset, 17 + y_offset, "'" + lpad(score_str, 5, " ") + score_str + "'", light_blue_font, 0)
 end sub
 
-sub drawRadar(current_level as ubyte)
+sub drawRadar(game_level as ubyte)
     dim message as string
-    if current_level = 1 then
-        message = "###RADAR####"
-    elseif current_level = 4 then
-        message = "##THE ARENA#"
-    elseif current_level >= 13 and (current_level - 13) mod 6 = 0 then
-        message = "###THE PIT##"
+    if game_level = 1 then
+        message = "###RADAR###"
+    elseif game_level = 4 then
+        message = "#THE ARENA#"
+    elseif game_level >= 13 and (game_level - 13) mod 6 = 0 then
+        message = "##THE PIT##"
     else
-        'message = "DUNGEON " + STR(current_level)
-        message = "DUNGEON" + lpad(STR(current_level), 4, " ")
+        message = "DUNGEON " + STR(game_level)
+        'message = "DUNGEON" + lpad(STR(game_level), 4, " ")
     end if
-    L2Text(8,14,"!" + message + "&",light_blue_font,0)
-    updateRadar()
+    L2Text(8, 14, "!" + message + "&", light_blue_font, 0)
+    'updateRadar()
 end sub
 
 sub updateRadar()
+    ' Build radar from monster grid positions
+    dim row as string = ""
+    dim hit as ubyte = FALSE
+    dim tx as ubyte = 0
+    dim ty as ubyte = 0
+    dim font as ubyte = light_blue_font
+
+    ' Clear the whole radar
     for y = 1 to 6
-        ' Build radar from monster grid positions
-        L2Text(8,14 + y,"'            '",light_blue_font,0)
+        L2Text(8, 14 + y, "'           '", light_blue_font, 0)
     next y
+
+    for npc = 1 to 6
+        if npc_state(npc) = ALIVE OR npc_state(npc) = INVISIBLE then
+            tx = CAST(ubyte, (npc_x(npc) - 48) / 16)
+            ty = CAST(ubyte, (npc_y(npc) - 48) / 16)
+            if npc_type(npc) = BURWOR then
+                font = light_blue_font
+            elseif npc_type(npc) = GARWOR then
+                font = yellow_font
+            elseif npc_type(npc) = THORWOR then
+                font = light_red_font
+            end if
+            L2Text(8 + tx, 15 + ty, ")", font, 0)
+        end if    
+    next npc
 end sub
 
 sub flipTitleScreens()
@@ -72,7 +102,7 @@ sub flipTitleScreens()
 end sub
 
 sub drawTitleScreen()
-    removeScoringSprites()
+    hideAllSprites()
     CLS256(0)
     L2Text(6,1,"/1980 MIDWAY MFG. CO.",light_blue_font,0)
     L2Text(9,2,"/1983 COMMODORE",light_blue_font,0)
@@ -80,11 +110,15 @@ sub drawTitleScreen()
     L2Text(11,22,"PRESS FIRE",light_red_font,0)
 end sub
 
-sub removeScoringSprites()
-    dim i as uinteger
+sub hideAllSprites()
     for i = 0 to 6
-        RemoveSprite(scoring_sprite_ids(i),0)
+        RemoveSprite(scoring_sprite_ids(i), 0)
     next i
+    for p = 1 to 2
+        for i = 1 to 5
+            RemoveSprite(player_lives_ids(p, i), 0)
+        next i
+    next p
 end sub
 
 sub drawScoringScreen()
@@ -164,6 +198,14 @@ sub drawDoubleScoreDungeon(x_offset as ubyte, y_offset as ubyte)
     drawLargeChar(@large_e, x_offset + 138, y_offset + 70, LIGHT_RED_COLOUR)
     drawLargeChar(@large_o, x_offset + 160, y_offset + 70, LIGHT_RED_COLOUR)
     drawLargeChar(@large_n, x_offset + 182, y_offset + 70, LIGHT_RED_COLOUR)
+end sub
+
+sub drawExtraMan()
+    L2Text(10, 18, "BONUS PLAYER", yellow_font, 0)
+    UpdateSprite(210, 170, player_lives_ids(1, 1), 6, sprite_xm, 0)
+    if player_lives(2) > 0 then
+        UpdateSprite(90, 170, player_lives_ids(2, 1), 2, sprite_no_mask, 0)
+    end if    
 end sub
 
 sub drawGameOver(x_offset as ubyte, y_offset as ubyte)
